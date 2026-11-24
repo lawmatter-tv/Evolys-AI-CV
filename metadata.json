@@ -1,0 +1,6 @@
+{
+  "name": "EVOLYS CV Studio",
+  "description": "Plateforme d'employabilité EVOLYS : analyse ATS, correction IA ligne par ligne, recréation de CV prêt pour l'ATS, comparaison d'offres, lettres de motivation et préparation aux entretiens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

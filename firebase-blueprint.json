@@ -1,0 +1,248 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account, trial window, and subscription state isolated per authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "firstName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "lastName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "authMethod": {
+          "type": "string",
+          "enum": ["google", "apple", "email_otp"],
+          "maxLength": 20
+        },
+        "locality": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "plan": {
+          "type": "string",
+          "enum": ["trial", "standard", "premium"],
+          "maxLength": 20
+        },
+        "subscriptionStatus": {
+          "type": "string",
+          "enum": ["trialing", "active", "expired", "canceled"],
+          "maxLength": 20
+        },
+        "trialStartedAt": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "trialEndsAt": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "stripeCustomerId": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "firstName",
+        "lastName",
+        "email",
+        "authMethod",
+        "plan",
+        "subscriptionStatus",
+        "trialStartedAt",
+        "trialEndsAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CvDocument": {
+      "title": "CvDocument",
+      "description": "Saved CV audit, structured CV content, and recreated or offer-tailored CV versions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fileName": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "candidateName": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "targetRole": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "formatScore": {
+          "type": "integer"
+        },
+        "contentScore": {
+          "type": "integer"
+        },
+        "analyzedAt": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "analysis": {
+          "type": "object"
+        },
+        "recreated": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerUid",
+        "fileName",
+        "candidateName",
+        "targetRole",
+        "formatScore",
+        "contentScore",
+        "analyzedAt",
+        "analysis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "JobApplication": {
+      "title": "JobApplication",
+      "description": "Candidate job application tracked with optional Gmail delivery metadata.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "candidateName": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "company": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "jobTitle": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "recipientEmail": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["a_envoyer", "envoye", "entretien", "offre", "refus"],
+          "maxLength": 30
+        },
+        "appliedDate": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "atsScoreSnapshot": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "coverLetterSnapshot": {
+          "type": "string",
+          "maxLength": 15000
+        },
+        "gmailMessageId": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerUid",
+        "candidateName",
+        "company",
+        "jobTitle",
+        "status",
+        "appliedDate",
+        "atsScoreSnapshot",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Owner-only user account profile, locality preference, 14-day trial window, and subscription tier."
+    },
+    "/users/{userId}/cvs/{cvId}": {
+      "schema": {
+        "$ref": "#/entities/CvDocument"
+      },
+      "description": "User's saved CV audits and recreated/tailored CV structures."
+    },
+    "/users/{userId}/applications/{appId}": {
+      "schema": {
+        "$ref": "#/entities/JobApplication"
+      },
+      "description": "User's tracked job applications including Gmail sent message metadata."
+    }
+  }
+}

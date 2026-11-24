@@ -1,0 +1,218 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Primitives ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Blueprints ---
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'firstName', 'lastName', 'email', 'authMethod',
+          'plan', 'subscriptionStatus', 'trialStartedAt', 'trialEndsAt',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'firstName', 'lastName', 'email', 'phone', 'authMethod',
+          'locality', 'plan', 'subscriptionStatus', 'trialStartedAt', 'trialEndsAt',
+          'stripeCustomerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.firstName is string && data.firstName.size() <= 100
+        && data.lastName is string && data.lastName.size() <= 100
+        && data.email is string && data.email.size() <= 200
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 40))
+        && data.authMethod in ['google', 'apple', 'email_otp']
+        && (!('locality' in data) || (data.locality is string && data.locality.size() <= 120))
+        && data.plan in ['trial', 'standard', 'premium']
+        && data.subscriptionStatus in ['trialing', 'active', 'expired', 'canceled']
+        && data.trialStartedAt is string && data.trialStartedAt.size() <= 50
+        && data.trialEndsAt is string && data.trialEndsAt.size() <= 50
+        && (!('stripeCustomerId' in data) || (data.stripeCustomerId is string && data.stripeCustomerId.size() <= 120))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCvDocument(data, userId, cvId) {
+      return data.keys().hasAll([
+          'id', 'ownerUid', 'fileName', 'candidateName', 'targetRole',
+          'formatScore', 'contentScore', 'analyzedAt', 'analysis',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerUid', 'fileName', 'candidateName', 'targetRole',
+          'formatScore', 'contentScore', 'analyzedAt', 'analysis', 'recreated',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == cvId
+        && isValidId(data.ownerUid)
+        && data.ownerUid == userId
+        && data.ownerUid == request.auth.uid
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200
+        && data.candidateName is string && data.candidateName.size() <= 160
+        && data.targetRole is string && data.targetRole.size() <= 160
+        && data.formatScore is int && data.formatScore >= 0 && data.formatScore <= 100
+        && data.contentScore is int && data.contentScore >= 0 && data.contentScore <= 100
+        && data.analyzedAt is string && data.analyzedAt.size() <= 50
+        && data.analysis is map
+        && (!('recreated' in data) || data.recreated is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidJobApplication(data, userId, appId) {
+      return data.keys().hasAll([
+          'id', 'ownerUid', 'candidateName', 'company', 'jobTitle',
+          'status', 'appliedDate', 'atsScoreSnapshot', 'notes',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerUid', 'candidateName', 'company', 'jobTitle',
+          'recipientEmail', 'status', 'appliedDate', 'atsScoreSnapshot',
+          'notes', 'coverLetterSnapshot', 'gmailMessageId',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.id == appId
+        && isValidId(data.ownerUid)
+        && data.ownerUid == userId
+        && data.ownerUid == request.auth.uid
+        && data.candidateName is string && data.candidateName.size() <= 160
+        && data.company is string && data.company.size() >= 1 && data.company.size() <= 160
+        && data.jobTitle is string && data.jobTitle.size() >= 1 && data.jobTitle.size() <= 200
+        && (!('recipientEmail' in data) || (data.recipientEmail is string && data.recipientEmail.size() <= 200))
+        && data.status in ['a_envoyer', 'envoye', 'entretien', 'offre', 'refus']
+        && data.appliedDate is string && data.appliedDate.size() <= 40
+        && data.atsScoreSnapshot is int && data.atsScoreSnapshot >= 0 && data.atsScoreSnapshot <= 100
+        && data.notes is string && data.notes.size() <= 1000
+        && (!('coverLetterSnapshot' in data) || (data.coverLetterSnapshot is string && data.coverLetterSnapshot.size() <= 15000))
+        && (!('gmailMessageId' in data) || (data.gmailMessageId is string && data.gmailMessageId.size() <= 160))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().plan == 'trial'
+        && incoming().subscriptionStatus == 'trialing'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().authMethod == existing().authMethod
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Update profile details & locality
+          incoming().diff(existing()).affectedKeys().hasOnly(['firstName', 'lastName', 'phone', 'locality', 'updatedAt'])
+          ||
+          // Action: Update subscription plan / billing state
+          incoming().diff(existing()).affectedKeys().hasOnly(['plan', 'subscriptionStatus', 'stripeCustomerId', 'updatedAt'])
+        );
+
+      allow delete: if false;
+
+      match /cvs/{cvId} {
+        allow get: if isValidId(userId) && isValidId(cvId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && existing().ownerUid == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(cvId)
+          && isOwner(userId)
+          && isValidCvDocument(incoming(), userId, cvId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if isValidId(userId)
+          && isValidId(cvId)
+          && isOwner(userId)
+          && isValidCvDocument(incoming(), userId, cvId)
+          && incoming().id == existing().id
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            // Action: Save recreated CV version
+            incoming().diff(existing()).affectedKeys().hasOnly(['recreated', 'targetRole', 'updatedAt'])
+            ||
+            // Action: Refresh CV audit scores
+            incoming().diff(existing()).affectedKeys().hasOnly(['targetRole', 'formatScore', 'contentScore', 'analyzedAt', 'analysis', 'recreated', 'updatedAt'])
+          )
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow delete: if isValidId(userId) && isValidId(cvId) && isOwner(userId);
+      }
+
+      match /applications/{appId} {
+        allow get: if isValidId(userId) && isValidId(appId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && existing().ownerUid == request.auth.uid;
+
+        allow create: if isValidId(userId)
+          && isValidId(appId)
+          && isOwner(userId)
+          && isValidJobApplication(incoming(), userId, appId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow update: if isValidId(userId)
+          && isValidId(appId)
+          && isOwner(userId)
+          && isValidJobApplication(incoming(), userId, appId)
+          && incoming().id == existing().id
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            // Action: Update pipeline status
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'updatedAt'])
+            ||
+            // Action: Mark sent via Gmail
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'recipientEmail', 'gmailMessageId', 'coverLetterSnapshot', 'notes', 'updatedAt'])
+          )
+          && exists(/databases/$(database)/documents/users/$(userId));
+
+        allow delete: if isValidId(userId) && isValidId(appId) && isOwner(userId);
+      }
+    }
+  }
+}

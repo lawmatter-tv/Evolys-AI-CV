@@ -1,0 +1,225 @@
+@import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="green"], [data-theme="green"] *));
+
+@layer base {
+  :root,
+  :root[data-theme="light"] {
+    --font-display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* Mode Clair — Crisp Executive Daylight */
+    --bg-canvas: #f5f7f6;
+    --bg-surface: #ffffff;
+    --bg-grouped: #f8faf9;
+    --bg-elevated: #eaefec;
+    --bg-paper-mat: #e7ece9;
+
+    --text-primary: #111814;
+    --text-secondary: #48544d;
+    --text-tertiary: #5d6a62;
+
+    --border-hairline: rgba(17, 24, 20, 0.1);
+    --border-strong: rgba(17, 24, 20, 0.18);
+
+    --accent: #0a4d30;
+    --accent-hover: #073923;
+    --accent-soft: #e6f0eb;
+    --accent-text: #0a4d30;
+
+    --status-ok: #15803d;
+    --status-ok-bg: #ecfdf3;
+    --status-warn: #b45309;
+    --status-warn-bg: #fffbeb;
+    --status-err: #b91c1c;
+    --status-err-bg: #fef2f2;
+    color-scheme: light;
+  }
+
+  :root[data-theme="green"] {
+    /* Mode Vert — Signature EVOLYS Forest Botanical */
+    --bg-canvas: #072317;
+    --bg-surface: #0d3322;
+    --bg-grouped: #12402b;
+    --bg-elevated: #174e36;
+    --bg-paper-mat: #092a1c;
+
+    --text-primary: #f3faf6;
+    --text-secondary: #c2ddd0;
+    --text-tertiary: #94bba8;
+
+    --border-hairline: rgba(194, 221, 208, 0.16);
+    --border-strong: rgba(194, 221, 208, 0.28);
+
+    --accent: #137949;
+    --accent-hover: #179057;
+    --accent-soft: rgba(52, 211, 153, 0.16);
+    --accent-text: #6ee7b7;
+
+    --status-ok: #6ee7b7;
+    --status-ok-bg: rgba(52, 211, 153, 0.16);
+    --status-warn: #fcd34d;
+    --status-warn-bg: rgba(251, 191, 36, 0.16);
+    --status-err: #fca5a5;
+    --status-err-bg: rgba(248, 113, 113, 0.18);
+    color-scheme: dark;
+  }
+
+  :root[data-theme="dark"] {
+    /* Mode Sombre — Refined Obsidian Charcoal */
+    --bg-canvas: #0d110f;
+    --bg-surface: #151b18;
+    --bg-grouped: #1c2420;
+    --bg-elevated: #242e29;
+    --bg-paper-mat: #101513;
+
+    --text-primary: #f2f5f3;
+    --text-secondary: #b8c2bc;
+    --text-tertiary: #8f9d95;
+
+    --border-hairline: rgba(242, 245, 243, 0.12);
+    --border-strong: rgba(242, 245, 243, 0.22);
+
+    --accent: #168050;
+    --accent-hover: #1b965f;
+    --accent-soft: rgba(46, 168, 112, 0.16);
+    --accent-text: #6ee7b7;
+
+    --status-ok: #4ade80;
+    --status-ok-bg: rgba(22, 163, 74, 0.18);
+    --status-warn: #fbbf24;
+    --status-warn-bg: rgba(217, 119, 6, 0.18);
+    --status-err: #f87171;
+    --status-err-bg: rgba(220, 38, 38, 0.18);
+    color-scheme: dark;
+  }
+
+  @media (prefers-contrast: more) {
+    :root,
+    :root[data-theme="light"] {
+      --border-hairline: rgba(17, 24, 20, 0.35);
+      --border-strong: rgba(17, 24, 20, 0.55);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  input,
+  textarea,
+  select {
+    color: var(--text-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-tertiary);
+    opacity: 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono-tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Official Google Sign-In Button Styling */
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #747775;
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: #1f1f1f;
+  cursor: pointer;
+  font-family: "DM Sans", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  height: 44px;
+  letter-spacing: 0.15px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 16px;
+  position: relative;
+  text-align: center;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.gsi-material-button:hover {
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.28), 0 1px 3px 1px rgba(60, 64, 67, 0.14);
+  background-color: #f8f9fa;
+}
+
+.gsi-material-button:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+  border-color: #1f1f1f1f;
+  opacity: 0.6;
+}
+
+.gsi-material-button-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  width: 100%;
+}
+
+.gsi-material-button-icon {
+  height: 18px;
+  width: 18px;
+  min-width: 18px;
+}
+
+.gsi-material-button-contents {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
